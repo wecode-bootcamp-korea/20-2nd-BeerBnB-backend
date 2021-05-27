@@ -1,9 +1,89 @@
-import json
+import json, jwt
 import bcrypt
+import requests
 
-from user.models  import User
+from user.models    import User
 
-from django.test import TestCase, Client
+from django.test    import TestCase
+from django.test    import Client
+from unittest.mock  import patch, MagicMock
+from my_settings    import SECRET_KEY
+
+class SocialUserTest(TestCase):
+    @patch("user.views.requests")
+    def test_kakao_signin_new_user_success(self, mocked_requests):
+        client = Client()
+
+        class MockedResponse:
+            def json(self):
+                return {
+                    'id' : 1,
+                    'kakao_account':{'email':'abc@gmail.com',
+                                     'gender':'M',
+                                     'birthday':'2021-05-31'
+                                    }
+                }
+        mocked_requests.get = MagicMock(return_value = MockedResponse())
+        headers             = {'HTTP_Authorization':'token'}
+        response            = client.get("/user/kakao", **headers)
+        id                  = MockedResponse().json()['id']
+        access_token        = jwt.encode({'id':id}, SECRET_KEY, algorithm='HS256')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+        
+            {
+                'message': 'existing user',
+                'access_token': access_token
+            }
+        )
+                        
+    @patch("user.views.requests")
+    def test_kakao_signin_new_user_token_required(self, mocked_requests):
+        client = Client()
+
+        class MockedResponse:
+            def json(self):
+                return {
+                    'id' : 1,
+                    'kakao_account':{'email':'abc@gmail.com',
+                                     'gender':'M',
+                                     'birthday':'2021-05-31'
+                                    }
+                }
+        mocked_requests.get = MagicMock(return_value = MockedResponse())
+        headers             = {'HTTP_Authorization':''}
+        response            = client.get("/user/kakao", **headers)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+            {
+                'message' : 'TOKEN REQUIRED'
+            }
+        )
+    @patch("user.views.requests")
+    def test_kakao_signin_new_user_email_required(self, mocked_requests):
+        client = Client()
+
+        class MockedResponse:
+            def json(self):
+                return {
+                    'id' : 1,
+                    'kakao_account':{
+                                     'gender':'M',
+                                     'birthday':'2021-05-31'
+                                    }
+                }
+        mocked_requests.get = MagicMock(return_value = MockedResponse())
+        headers             = {'HTTP_Authorization':'token'}
+        response            = client.get("/user/kakao", **headers)
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.json(),
+            {
+                'message' : 'EMAIL REQUIRED'
+            }
+        )
 
 class UserSignUpTest(TestCase):
     def setUp(self):
@@ -16,10 +96,6 @@ class UserSignUpTest(TestCase):
                 birthday     = '0000-00-00',
                 phone_number = 1012345678
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-
     def test_user_post_view(self):
         client   = Client()
         user     = {
@@ -169,7 +245,7 @@ class UserSignInTest(TestCase):
                 first_name   = 'test_user_first_name',
                 last_name    = 'test_user_last_name',
                 sex          = 'M',
-                is_auth      = True,
+                is_allowed   = True,
                 birthday     = '0000-00-00',
                 phone_number = 1012345678
             )
@@ -182,7 +258,7 @@ class UserSignInTest(TestCase):
         user     = {
                     "email"        : "abc@gmail.com",
                     "password"     : "123456789",
-                    "is_auth"      : True
+                    "is_allowed"   : True
                     }
         
         response = client.post('/user/signin', json.dumps(user), content_type='application/json')
@@ -192,3 +268,4 @@ class UserSignInTest(TestCase):
                 'message' : 'INVALID_USER'
             }
         )
+    

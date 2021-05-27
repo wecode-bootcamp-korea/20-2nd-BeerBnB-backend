@@ -12,7 +12,7 @@ class User(models.Model):
     create_at    = models.DateTimeField(auto_now_add=True)
     update_at    = models.DateTimeField(auto_now=True)
     profile_url  = models.CharField(max_length=2000, null=True)
-    is_auth      = models.BooleanField(default=False)
+    is_allowed   = models.BooleanField(default=False)
     review       = models.ManyToManyField("User", through="Review", related_name="user")
     wishlist     = models.ManyToManyField("room.Room", through="room.WishList", related_name="user")
 

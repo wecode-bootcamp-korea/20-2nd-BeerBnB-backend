@@ -1,4 +1,4 @@
-import json, bcrypt, jwt
+import json, bcrypt, jwt, requests
 
 from django.http    import JsonResponse
 from django.views   import View
@@ -63,15 +63,57 @@ class Signin(View):
             user            = User.objects.get(email=email)
             user_password   = user.password.encode('utf-8')
 
-            if not user.is_auth:
+            if not user.is_allowed:
                 return JsonResponse({'message': 'UNAUTHORIZED_USER'}, status=401)
             
             if not bcrypt.checkpw(password, user_password):
                 return JsonResponse({'message': 'INVALID_USER'}, status=401)
 
-            data         = {'user_id':user.id}
+            data         = {'id':user.id}
             access_token = jwt.encode(data, SECRET_KEY, algorithm='HS256')   
             return JsonResponse({'message':'SUCCESS' , 'token':access_token}, status=200)
 
         except KeyError:
             return JsonResponse({'message':'KEYERROR'}, status=400)
+            
+class KaKaoSignIn(View):
+    def get(self, request):
+        try:
+            kakao_token = request.headers.get("Authorization", None)
+            api_url     = "https://kapi.kakao.com/v2/user/me"
+            token_type  = "Bearer"
+
+            if not kakao_token:
+                return JsonResponse({'message': "TOKEN REQUIRED"}, status=400)
+
+            response = requests.get(
+                api_url, 
+                headers= {
+                    'Authorization':f'{token_type} {kakao_token}'
+                }
+            ).json()
+            error_massage = response.get('msg', None)
+
+            if error_massage:
+                return JsonResponse({'massege' : error_massage}, status = 400)
+
+            kakao_account = response.get("kakao_account", None)
+
+            if 'email' not in kakao_account:
+                return JsonResponse({'message':'EMAIL REQUIRED'}, status=405)
+
+            user, created = User.objects.get_or_create(
+                social_id = response.get('id'),
+                email     = kakao_account.get('email'),
+                sex       = kakao_account.get('gender'),
+                birthday  = kakao_account.get('birthday')
+            )
+
+            access_token = jwt.encode({'id':user.id}, SECRET_KEY, algorithm='HS256')
+            if not created:
+                return JsonResponse({'message':'created user' , 'access_token':access_token}, status=200)
+            return JsonResponse({'message':'existing user' , 'access_token':access_token}, status=200)
+
+        except KeyError:
+            return JsonResponse({'message':'KEY_ERROR'}, status=404)
+        
