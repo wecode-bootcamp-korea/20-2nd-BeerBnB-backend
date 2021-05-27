@@ -2,6 +2,7 @@ from django.db import models
 
 class User(models.Model):
     email        = models.EmailField(max_length=128, unique=True, null=True)
+    social_id    = models.CharField(max_length=128, unique=True, null=True)
     first_name   = models.CharField(max_length=32, null=True)
     last_name    = models.CharField(max_length=32, null=True)
     password     = models.CharField(max_length=128, null=True)
@@ -11,6 +12,7 @@ class User(models.Model):
     create_at    = models.DateTimeField(auto_now_add=True)
     update_at    = models.DateTimeField(auto_now=True)
     profile_url  = models.CharField(max_length=2000, null=True)
+    is_auth      = models.BooleanField(default=False)
     review       = models.ManyToManyField("User", through="Review", related_name="user")
     wishlist     = models.ManyToManyField("room.Room", through="room.WishList", related_name="user")
 
