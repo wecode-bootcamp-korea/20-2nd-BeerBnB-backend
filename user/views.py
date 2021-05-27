@@ -5,7 +5,6 @@ from django.views   import View
 
 from beerbnb.settings import SECRET_KEY
 from user.models      import User
-<<<<<<< HEAD
 from user.validate    import validate_email, validate_password, validate_phone_number
 
 class Signup(View):
@@ -50,7 +49,6 @@ class Signup(View):
 
         except KeyError:
             return JsonResponse({'message':'KEY ERROR'}, status=400)
-=======
 
 class Signin(View):
     def post(self, request):
@@ -74,4 +72,3 @@ class Signin(View):
 
         except KeyError:
             return JsonResponse({'MASSAGE':'KEYERROR'}, status=400)
->>>>>>> feature/user-signin
