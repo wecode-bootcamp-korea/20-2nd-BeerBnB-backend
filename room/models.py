@@ -4,8 +4,8 @@ from django.db import models
 class Room(models.Model):
     name         = models.CharField(max_length=128)
     min_date     = models.CharField(max_length=32, default="1")
-    city         = models.CharField(max_length=32)
-    capacity     = models.IntegerField(max_length=32, default="2")
+    city         = models.CharField(max_length=128)
+    capacity     = models.IntegerField()
     latitude     = models.DecimalField(max_digits=9, decimal_places=7)
     longtitude   = models.DecimalField(max_digits=10, decimal_places=7)
     is_refund    = models.BooleanField(default=False)
