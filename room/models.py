@@ -13,7 +13,7 @@ class Room(models.Model):
     host         = models.ForeignKey("user.Host", on_delete=models.CASCADE, related_name="room")
     category     = models.ForeignKey("Category", on_delete=models.CASCADE, related_name="room")
     able_time    = models.ForeignKey("AbleTime", on_delete=models.CASCADE, related_name="room")
-    disable_date = models.ForeignKey("DisableDate", on_delete=models.CASCADE, related_name="room")
+    disable_date = models.ForeignKey("DisableDate", on_delete=models.CASCADE, related_name="room", null=True)
     amenity      = models.ManyToManyField("Amenity", through="RoomAmenity", related_name="room")
 
     class Meta:
@@ -44,7 +44,7 @@ class Amenity(models.Model):
     image = models.CharField(max_length=2000)
 
     class Meta:
-        db_table = "amentities"
+        db_table = "amenities"
 
 class WishList(models.Model):
     wish_user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name="user_wish")
@@ -54,11 +54,11 @@ class WishList(models.Model):
         db_table = "wishlists"
 
 class DisableDate(models.Model):
-    start_date = models.DateField()
-    end_date   = models.DateField()
+    start_date = models.DateField(null=True)
+    end_date   = models.DateField(null=True)
 
     class Meta:
-        db_table = "disalbe_dates"
+        db_table = "disable_dates"
 
 class AbleTime(models.Model):
     checkin  = models.TimeField(default=datetime.time(15))
