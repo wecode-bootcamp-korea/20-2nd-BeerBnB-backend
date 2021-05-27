@@ -11,4 +11,8 @@ pytz==2021.1
 six==1.16.0
 sqlparse==0.4.1
 requests==2.25.1
+<<<<<<< HEAD
 gunicorn==20.0.4
+=======
+
+>>>>>>> a94e80e... social login

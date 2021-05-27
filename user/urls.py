@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from django.urls import path
 
 <<<<<<< HEAD
@@ -29,10 +30,15 @@ urlpatterns = [
     path('/signin', Signin.as_view())
 >>>>>>> 7dc3f5a... commit
 =======
+=======
+from django.urls import path
+
+>>>>>>> a94e80e... social login
 from user.views import KaKaoSignIn
 
 urlpatterns = [
     path('/kakao', KaKaoSignIn.as_view())
+<<<<<<< HEAD
 >>>>>>> cd6ce12... social login
 <<<<<<< HEAD
 >>>>>>> d5fa9d3... social login
@@ -56,5 +62,10 @@ urlpatterns = [
     path('/signup', Signup.as_view()),
     path('/auth/<str:uidb64>/<str:email_token>', Auth.as_view())
 >>>>>>> 666ebdc... auth_email
+<<<<<<< HEAD
 >>>>>>> b091a65... auth_email
+=======
+=======
+>>>>>>> a94e80e... social login
+>>>>>>> 65f2a33... dev
 ]
