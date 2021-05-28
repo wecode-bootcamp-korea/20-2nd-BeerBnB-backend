@@ -6,14 +6,55 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import os
 from pathlib     import Path
-from my_settings import DATABASES, SECRET_KEY
+from my_settings import DATABASES, SECRET_KEY, MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = SECRET_KEY
+
+#AWS S3
+AWS_ACCESS_KEY_ID = MY_AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = MY_AWS_SECRET_ACCESS_KEY
+AWS_S3_SECURE_URLS = False
+AWS_QUERYSTRING_AUTH = False
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+
+AWS_REGION = "ap-northeast-2"
+AWS_STORAGE_BUCKET_NAME = "beerbnb"
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME,AWS_REGION)
+
+
+STATIC_DEFAULT_ACL = 'public-read'
+STATIC_LOCATION = 'static/'
+STATIC_URL = 'https://%s/%s' % (AWS_S3_CUSTOM_DOMAIN, STATIC_LOCATION)
+
+MEDIA_DEFAULT_ACL = 'public-read'
+MEDIA_LOCATION = 'media/'
+MEDIA_URL = 'https://%s/%s' % (AWS_S3_CUSTOM_DOMAIN, MEDIA_LOCATION)
+
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    STATIC_DIR,
+]
+
+MEDIA_DIR = os.path.join(BASE_DIR, 'media')
+MEDIAFILES_DIRS = [
+    MEDIA_DIR,
+]
+
+DEFAULT_FILE_STORAGE = 'beerbnb.storages.MediaStorage' 
+STATICFILES_STORAGE = 'beerbnb.storages.StaticStorage'
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
@@ -29,6 +70,7 @@ INSTALLED_APPS = [
     'user',
     'room',
     'reservation',
+    'storages'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -83,9 +125,12 @@ TIME_ZONE = 'Asia/Seoul'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
-STATIC_URL = '/static/'
+
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
