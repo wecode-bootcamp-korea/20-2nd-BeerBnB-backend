@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from django.urls import path
 
 <<<<<<< HEAD
@@ -32,5 +33,16 @@ from user.views import KaKaoSignIn
 urlpatterns = [
     path('/kakao', KaKaoSignIn.as_view())
 >>>>>>> cd6ce12... social login
+<<<<<<< HEAD
 >>>>>>> d5fa9d3... social login
+=======
+=======
+from django.urls   import path
+
+from user.views import ProfileUpload
+
+urlpatterns = [
+    path('/upload', ProfileUpload.as_view()),
+>>>>>>> b2b15cb... upload
+>>>>>>> 1cb79c1... upload
 ]

@@ -1,4 +1,5 @@
 import json, bcrypt, jwt, requests
+import boto3
 
 from django.http    import JsonResponse
 from django.views   import View
@@ -6,6 +7,8 @@ from django.views   import View
 from beerbnb.settings import SECRET_KEY
 from user.models      import User
 from user.validate    import validate_email, validate_password, validate_phone_number
+from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY
+from beerbnb.settings import AWS_S3_CUSTOM_DOMAIN
 
 class Signup(View):
     def post(self, request):
@@ -117,3 +120,30 @@ class KaKaoSignIn(View):
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=404)
         
+class ProfileUpload(View):
+    def __init__(self):
+        self.client = boto3.client(
+            's3',
+            aws_access_key_id     = MY_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key = MY_AWS_SECRET_ACCESS_KEY  
+            )
+            
+        self.bucket = 'beerbnb'
+
+    def post(self, request): 
+        file = request.FILES.get('file')
+
+        if file:
+            self.client.upload_fileobj(
+                file,
+                self.bucket,
+                f'profile/{file}',
+                ExtraArgs={
+                    "ContentType": file.content_type
+                }
+            )
+
+            file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file.name}" 
+            
+            return JsonResponse({'massage':'success'}, status=200)
+        return JsonResponse({'massage':"none file"}, status=404)
