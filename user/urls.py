@@ -15,7 +15,11 @@ from django.urls import path
 >>>>>>> d5fa9d3... social login
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> d59e24d... commit
+=======
+<<<<<<< HEAD
+>>>>>>> 58262ea... upload
 from user.views import Signup, Signin, KaKaoSignIn
 =======
 from user.views import Signup, Signin
@@ -23,10 +27,14 @@ from user.views import Signup, Signin
 =======
 from user.views import Signup, Signin, KaKaoSignIn, ProfileUpload, Auth
 >>>>>>> ee691ea... commit
+=======
+from user.views import Signup, Signin, KaKaoSignIn, ProfileUpload
+>>>>>>> f5972cb... upload
 
 urlpatterns = [
     path('/signup', Signup.as_view()),
     path('/signin', Signin.as_view()),
+<<<<<<< HEAD
 <<<<<<< HEAD
     path('/kakao', KaKaoSignIn.as_view())
 <<<<<<< HEAD
@@ -83,5 +91,12 @@ urlpatterns = [
     path('/upload', ProfileUpload.as_view()),
     path('/auth/<str:uidb64>/<str:email_token>', Auth.as_view())
 >>>>>>> ee691ea... commit
+<<<<<<< HEAD
 >>>>>>> d59e24d... commit
+=======
+=======
+    path('/kakao', KaKaoSignIn.as_view()),
+    path('/upload', ProfileUpload.as_view())
+>>>>>>> f5972cb... upload
+>>>>>>> 58262ea... upload
 ]
