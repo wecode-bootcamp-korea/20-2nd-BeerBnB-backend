@@ -1,11 +1,16 @@
 import json, bcrypt, jwt, requests
+import boto3
+from uuid           import uuid4
 
 from django.http    import JsonResponse
 from django.views   import View
 
-from beerbnb.settings import SECRET_KEY
 from user.models      import User
 from user.validate    import validate_email, validate_password, validate_phone_number
+from user.utils       import LoginRequired
+from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
+from beerbnb.settings import SECRET_KEY
+from user.file_utils  import S3Client
 
 class Signup(View):
     def post(self, request):
@@ -63,8 +68,8 @@ class Signin(View):
             user            = User.objects.get(email=email)
             user_password   = user.password.encode('utf-8')
 
-            if not user.is_allowed:
-                return JsonResponse({'message': 'UNAUTHORIZED_USER'}, status=401)
+            # if not user.is_allowed:
+            #     return JsonResponse({'message': 'UNAUTHORIZED_USER'}, status=401)
             
             if not bcrypt.checkpw(password, user_password):
                 return JsonResponse({'message': 'INVALID_USER'}, status=401)
@@ -116,4 +121,82 @@ class KaKaoSignIn(View):
 
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=404)
-        
+
+client = boto3.client(
+            's3',
+            aws_access_key_id     = MY_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key = MY_AWS_SECRET_ACCESS_KEY  
+            )
+
+class ProfileUpload(View):
+    @LoginRequired
+    def post(self, request): 
+        try:
+            file   = request.FILES.get('profile_file')
+            user   = request.user
+            if not file:
+                return JsonResponse({'massage':"none file"}, status=404)
+            
+            s3_client = S3Client(client)
+            file_name = uuid4().hex
+            s3_client.upload(file, file_name)
+
+            
+            file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file_name}" 
+
+            user.profile_url = file_urls
+            user.save()
+
+            return JsonResponse({'massege':'create'}, status=200)
+            
+        except KeyError:
+            return JsonResponse({"message" : "key error"}, status=400)
+
+class ProfileUploadUpdate(View):
+    @LoginRequired
+    def post(self, request): 
+        try:
+            file   = request.FILES.get('profile_file')
+            user   = request.user
+            if not file:
+                return JsonResponse({'massage':"none file"}, status=404)
+            
+            if not user.profile_url:
+                return JsonResponse({'message':'none profile'}, status=400)
+            
+            file_name = user.profile_url.replace(f"https://{AWS_S3_CUSTOM_DOMAIN}/", "")
+            s3_client = S3Client(client)
+            s3_client.delete(file_name)
+
+            file_name = uuid4().hex
+            s3_client.upload(file, file_name)
+
+            file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file_name}" 
+            user.profile_url = file_urls
+            user.save()
+
+            return JsonResponse({'massege':'update'}, status=200)
+            
+        except KeyError:
+            return JsonResponse({"message" : "key error"}, status=400)
+
+class ProfileDelete(View):
+    @LoginRequired
+    def post(self, request): 
+        try:
+            user   = request.user
+
+            if not user.profile_url:
+                return JsonResponse({'message':'none profile'}, status=400)
+
+            file_name = user.profile_url.replace(f"https://{AWS_S3_CUSTOM_DOMAIN}/", "")
+            user.profile_url = None
+            user.save()
+
+            s3_client = S3Client(client)
+            s3_client.delete(file_name)
+
+            return JsonResponse({'massege':'delete'}, status=200)
+            
+        except KeyError:
+            return JsonResponse({"message" : "key error"}, status=400)

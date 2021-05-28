@@ -1,7 +1,10 @@
 import json, jwt
+import boto3
+import io
 import bcrypt
 import requests
 
+from PIL import Image
 from user.models    import User
 
 from django.test    import TestCase
@@ -85,6 +88,138 @@ class SocialUserTest(TestCase):
             }
         )
 
+class ProfileUploadTest(TestCase):
+    def setUp(self):
+        password = '123456789'.encode('utf-8')
+        password = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
+
+        User.objects.create(
+                id           = 1,
+                email        = 'abc@gmail.com',
+                password     = password,
+                first_name   = 'test_user_first1_name',
+                last_name    = 'test_user_last1_name',
+                sex          = 'M',
+                birthday     = '0000-00-00',
+                phone_number = 1012345678
+            )
+    def tearDown(self):
+        User.objects.all().delete()
+
+    def generate_photo_file(self):
+        file  = io.BytesIO()
+        image = Image.new('RGBA', size=(100, 100), color=(155, 0, 0))
+        image.save(file, 'png')
+        file.name = 'test.png'
+        file.seek(0)
+        return file
+
+    @patch("user.views.boto3.client")
+    def test_upload_success_photo(self, mocked_client):
+        mocked_client = MagicMock()
+        client        = Client()
+        user          = User.objects.get(id = 1)
+        token         = jwt.encode({'id': user.id}, SECRET_KEY, algorithm = 'HS256')
+        headers       = {"HTTP_Authorization" : token}
+        bucket        = "test"
+        profile_file  = self.generate_photo_file()
+        file_urls     = f"https://AWS_S3_CUSTOM_DOMAIN/profile/{profile_file}" 
+        data          = {'profile_file':profile_file}
+
+        user.profile_url = file_urls
+        user.save()
+        response = client.post('/user/upload', data, format='multipart', **headers)
+        self.assertEqual(response.status_code, 200)
+
+    @patch("user.views.boto3.client")
+    def test_upload_none_token_photo(self, mocked_client):
+        mocked_client = MagicMock()
+        client        = Client()
+        user          = User.objects.get(id = 1)
+        token         = jwt.encode({'id': user.id}, SECRET_KEY, algorithm = 'HS256')
+        bucket        = "test"
+        profile_file  = self.generate_photo_file()
+        file_urls     = f"https://AWS_S3_CUSTOM_DOMAIN/profile/{profile_file}" 
+        data          = {'profile_file':profile_file}
+
+        user.profile_url = file_urls
+        user.save()
+        response = client.post('/user/upload', data, format='multipart')
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), 
+            {
+                'MESSAGE' : 'NO LOGIN'
+            }
+        )
+
+    @patch("user.views.boto3.client")
+    def test_upload_invalid_token_photo(self, mocked_client):
+        mocked_client = MagicMock()
+        client        = Client()
+        user          = User.objects.get(id = 1)
+        token         = jwt.encode({'id': user.id}, SECRET_KEY, algorithm = 'HS256')
+        headers       = {"HTTP_Authorization" : 'test_token'}
+        bucket        = "test"
+        profile_file  = self.generate_photo_file()
+        file_urls     = f"https://AWS_S3_CUSTOM_DOMAIN/profile/{profile_file}" 
+        data          = {'profile_file':profile_file}
+
+        user.profile_url = file_urls
+        user.save()
+        response = client.post('/user/upload', data, format='multipart', **headers)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), 
+            {
+                'MESSAGE': 'INVALID_TOKEN'
+            }
+        )
+    
+    @patch("user.views.boto3.client")
+    def test_upload_invalid_user_photo(self, mocked_client):
+        mocked_client  = MagicMock()
+        client         = Client()
+        user           = User.objects.get(id = 1)
+        test_id        = 2
+        token          = jwt.encode({'id': test_id}, SECRET_KEY, algorithm = 'HS256')
+        headers        = {"HTTP_Authorization" : token}
+        bucket         = "test"
+        profile_file   = self.generate_photo_file()
+        file_urls      = f"https://AWS_S3_CUSTOM_DOMAIN/profile/{profile_file}" 
+        data           = {'profile_file':profile_file}
+
+        user.profile_url = file_urls
+        user.save()
+        response = client.post('/user/upload', data, format='multipart', **headers)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), 
+            {
+                'MESSAGE' : 'INVALID_USER'
+            }
+        )
+
+    @patch("user.views.boto3.client")
+    def test_upload_key_error_photo(self, mocked_client):
+        mocked_client  = MagicMock()
+        client         = Client()
+        user           = User.objects.get(id = 1)
+        invalid_key    = 'test_key'
+        token          = jwt.encode({invalid_key: user.id}, SECRET_KEY, algorithm = 'HS256')
+        headers        = {"HTTP_Authorization" : token}
+        bucket         = "test"
+        profile_file   = self.generate_photo_file()
+        file_urls      = f"https://AWS_S3_CUSTOM_DOMAIN/profile/{profile_file}" 
+        data           = {'profile_file':profile_file}
+
+        user.profile_url = file_urls
+        user.save()
+        response = client.post('/user/upload', data, format='multipart', **headers)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), 
+            {
+                'MESSAGE': 'KEY_ERROR'
+            }
+        )
+        
 class UserSignUpTest(TestCase):
     def setUp(self):
         User.objects.create(
