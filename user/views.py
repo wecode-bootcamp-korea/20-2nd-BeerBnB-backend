@@ -5,12 +5,12 @@ from uuid           import uuid4
 from django.http    import JsonResponse
 from django.views   import View
 
-from user.models      import User
-from user.validate    import validate_email, validate_password, validate_phone_number
-from user.utils       import LoginRequired
-from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
-from beerbnb.settings import SECRET_KEY
-from user.file_utils  import S3Client
+from user.models        import User
+from user.validate      import validate_email, validate_password, validate_phone_number
+from user.utils         import LoginRequired
+from my_settings        import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
+from beerbnb.settings   import SECRET_KEY
+from user.profile_utils import S3Client
 
 class Signup(View):
     def post(self, request):
@@ -139,10 +139,7 @@ class ProfileUpload(View):
             
             s3_client = S3Client(client)
             file_name = uuid4().hex
-            s3_client.upload(file, file_name)
-
-            
-            file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file_name}" 
+            file_urls = s3_client.upload(file, file_name)
 
             user.profile_url = file_urls
             user.save()
@@ -169,9 +166,8 @@ class ProfileUploadUpdate(View):
             s3_client.delete(file_name)
 
             file_name = uuid4().hex
-            s3_client.upload(file, file_name)
+            file_urls = s3_client.upload(file, file_name)
 
-            file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file_name}" 
             user.profile_url = file_urls
             user.save()
 
