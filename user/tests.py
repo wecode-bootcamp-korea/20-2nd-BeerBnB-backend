@@ -4,13 +4,59 @@ import io
 import bcrypt
 import requests
 
-from PIL import Image
-from user.models    import User
+from PIL         import Image
+from user.models import User
 
-from django.test    import TestCase
-from django.test    import Client
-from unittest.mock  import patch, MagicMock
-from my_settings    import SECRET_KEY
+from django.test            import TestCase
+from django.test            import Client
+from django.utils.encoding  import force_bytes
+from django.utils.http      import urlsafe_base64_encode
+from unittest.mock          import patch, MagicMock
+from my_settings            import SECRET_KEY
+
+class AuthTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        password = '123456789'.encode('utf-8')
+        password = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
+        User.objects.create(
+                id           = 1,
+                email        = 'abc@gmail.com',
+                password     = password,
+                first_name   = 'test_user_first_name',
+                last_name    = 'test_user_last_name',
+                sex          = 'M',
+                birthday     = '0000-00-00',
+                phone_number = 10123453278,
+                is_allowed   = False,
+            )
+            
+    def tearDown(self):
+        User.objects.all().delete()
+
+    def test_success_auth_email(self):
+        client      = Client()
+        user        = User.objects.get(id=1)
+        uid64       = urlsafe_base64_encode(force_bytes(user.id))
+        email_token = jwt.encode({'id':user.id}, SECRET_KEY, algorithm='HS256')
+        response    = client.get(f"/user/auth/{uid64}/{email_token}")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(user.is_allowed, True)
+
+    def test_success_auth_email(self):
+        client      = Client()
+        user        = User.objects.get(id=1)
+        uid64       = urlsafe_base64_encode(force_bytes(user.id))
+        email_token = jwt.encode({'id':2}, SECRET_KEY, algorithm='HS256')
+        response    = client.get(f"/user/auth/{uid64}/{email_token}")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), 
+            {
+                'massage': 'auth fail'
+            }
+        )
 
 class SocialUserTest(TestCase):
     @patch("user.views.requests")
@@ -128,7 +174,7 @@ class ProfileUploadTest(TestCase):
 
         user.profile_url = file_urls
         user.save()
-        response = client.post('/user/upload', data, format='multipart', **headers)
+        response = client.post('/user/profile', data, format='multipart', **headers)
         self.assertEqual(response.status_code, 200)
 
     @patch("user.views.boto3.client")
@@ -144,7 +190,7 @@ class ProfileUploadTest(TestCase):
 
         user.profile_url = file_urls
         user.save()
-        response = client.post('/user/upload', data, format='multipart')
+        response = client.post('/user/profile', data, format='multipart')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), 
             {
@@ -166,7 +212,7 @@ class ProfileUploadTest(TestCase):
 
         user.profile_url = file_urls
         user.save()
-        response = client.post('/user/upload', data, format='multipart', **headers)
+        response = client.post('/user/profile', data, format='multipart', **headers)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 
             {
@@ -189,7 +235,7 @@ class ProfileUploadTest(TestCase):
 
         user.profile_url = file_urls
         user.save()
-        response = client.post('/user/upload', data, format='multipart', **headers)
+        response = client.post('/user/profile', data, format='multipart', **headers)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), 
             {
@@ -212,7 +258,7 @@ class ProfileUploadTest(TestCase):
 
         user.profile_url = file_urls
         user.save()
-        response = client.post('/user/upload', data, format='multipart', **headers)
+        response = client.post('/user/profile', data, format='multipart', **headers)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 
             {
@@ -220,6 +266,25 @@ class ProfileUploadTest(TestCase):
             }
         )
         
+class AuthEmailTest(TestCase):
+    def setup(self):
+        User.objects.create(
+            id           = 1,
+            email        = 'abc@gmail.com',
+            password     = '123456789',
+            first_name   = 'test_user_first_name',
+            last_name    = 'test_user_last_name',
+            sex          = 'M',
+            birthday     = '0000-00-00',
+            phone_number = 1012345678
+        )
+    
+    def tearDown(self):
+        User.objects.all().create()
+
+    def test_send_success_email(self):
+        client = Client()
+
 class UserSignUpTest(TestCase):
     def setUp(self):
         User.objects.create(
@@ -403,4 +468,3 @@ class UserSignInTest(TestCase):
                 'message' : 'INVALID_USER'
             }
         )
-    
