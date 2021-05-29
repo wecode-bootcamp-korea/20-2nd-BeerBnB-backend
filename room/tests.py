@@ -1,13 +1,16 @@
+import json, re, bcrypt, jwt
+
+
 from django.test        import TestCase, Client
 
 from room.models        import Room, Category, RoomAmenity, Image, Amenity, WishList, DisableDate, AbleTime
 from user.models        import User,Host, Review
 from reservation.models import Reservation, Status
-from reservation.check  import check, check_in, check_out
 from my_settings        import SECRET_KEY
 
-class RoomTest(TestCase):
-    @classmethod					
+
+class RoomwishTest(TestCase):
+    @classmethod
     def setUpTestData(cls):
         status=Status.objects.create(
             id = 1,
@@ -120,6 +123,17 @@ class RoomTest(TestCase):
         )
         Review.objects.create(
             id                = 2,
+            review_user       = user1,
+            review_room       = room2,
+            cleanliness       = 3.0,
+            communication     = 2.0,
+            checkin           = 4.0,
+            accuracy          = 4.0,
+            location          = 2.0,
+            cost_effectivenes = 4.0
+        )
+        Review.objects.create(
+            id                = 2,
             review_user       = user2,
             review_room       = room2,
             cleanliness       = 3.0,
@@ -137,64 +151,95 @@ class RoomTest(TestCase):
             checkin  = '2021-06-07',
             checkout = '2021-06-18'
         )
+        WishList.objects.create(
+            id =1,
+            wish_user = user1,
+            wish_room = room1
+        )
 
-    def test_roomdetail_get_view(self):
+    def test_post_wishlist_view(self):
         client   = Client()
-        response = client.get('/rooms/1')
+        token    = jwt.encode({'id': User.objects.get(id=1).id}, SECRET_KEY, algorithm = 'HS256')
+        headers  = {"HTTP_Authorization": token}
+        response = client.post('/rooms/wishlist/2', **headers)
+        self.assertEqual(response.json(),{'MESSAGE':'SUCCESS'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_duplicatewishlist_view(self):
+        client   = Client()
+        token    = jwt.encode({'id': User.objects.get(id=1).id}, SECRET_KEY, algorithm = 'HS256')
+        headers  = {"HTTP_Authorization": token}
+        response = client.post('/rooms/wishlist/1', **headers)
+        self.assertEqual(response.json(),{'MESSAGE':'Already Choosen'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_delete_wishlist_view(self):
+        client   = Client()
+        token    = jwt.encode({'id': User.objects.get(id=1).id}, SECRET_KEY, algorithm = 'HS256')
+        headers  = {"HTTP_Authorization": token}
+        response = client.delete('/rooms/wishlist/1', **headers)
+        self.assertEqual(response.json(),{'MESSAGE':'Delete Success'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_nothing_to_delete_wishlist_view(self):
+        client   = Client()
+        token    = jwt.encode({'id': User.objects.get(id=1).id}, SECRET_KEY, algorithm = 'HS256')
+        headers  = {"HTTP_Authorization": token}
+        response = client.delete('/rooms/wishlist/2', **headers)
+        self.assertEqual(response.json(),{'MESSAGE':'Already not Exist in list'})
+        self.assertEqual(response.status_code, 400)
+    
+    def test_get_wishlist_view(self):
+        client   = Client()
+        token    = jwt.encode({'id': User.objects.get(id=1).id}, SECRET_KEY, algorithm = 'HS256')
+        headers  = {"HTTP_Authorization": token}
+        response = client.get('/rooms/wishlist',**headers)
         self.assertEqual(response.json(), {
-            'detail': 
+            'result': [
                 {
+                    'room_id'  : Room.objects.get(id=1).id,
                     'room_name': '양재아파트',
                     'address'  : '서울 양재동',
                     'price'    : '100000.00',
                     'room_type': '아파트',
-                    'image'    : 'a',
+                    'image'    : ['a'],
                     'is_super' : True,
-                    'host'     : '김하나',
                     'capacity' : 3,
-                    'amenity'  : [
-                            {
-                            'id'         : 1,
-                            'icon'       : 'fas fa-fan',
-                            'description': '와인'
-                            },
-                            {
-                            'id'         : 2,
-                            'icon'       : 'fas fa-beer',
-                            'description': '맥주'
-                            }
-                        ],
+                    'lat'      : '1.0221111',
+                    'lng'      : '2.2222211',
+                    'amenity'  : ['와인','맥주'],
                     'rating' : [
                         {
                         'category'       : 'cleanliness',
-                        'category_rating': 3.0
+                        'category_rating': '3.00000'
                     },
                     {
                         'category'       : 'communication',
-                        'category_rating': 2.0
+                        'category_rating': '2.00000'
                     },
                     {
                         'category'       : 'checkin',
-                        'category_rating': 4.0
+                        'category_rating': '4.00000'
                     },
                     {
                         'category'       : 'accuracy',
-                        'category_rating': 4.0
+                        'category_rating': '4.00000'
                     },
                     {
                         'category'       : 'location',
-                        'category_rating': 2.0
+                        'category_rating': '2.00000'
                     },
                     {
                         'category'       : 'cost_effectivenes',
-                        'category_rating': 4.0
+                        'category_rating': '4.00000'
                     }
                     ]
                 }
+                    ]
         })
         self.assertEqual(response.status_code, 200)
-        
-    def test_roomdetail_invalid_room_view(self):
+
+    def test_nothing_to_get_wishlist_view(self):
         client   = Client()
         response = client.get('/rooms/999')
         self.assertEqual(response.json(),{'message':'NOT_FOUND_ROOM_ID'})
