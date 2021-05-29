@@ -4,14 +4,14 @@ class S3Client:
     def __init__(self, s3_client):
         self.s3_client = s3_client
 
-    def upload(self, file, file_name):
+    def upload(self, file, file_name, FOLDER_NAME):
         self.s3_client.upload_fileobj(
             file,
             AWS_STORAGE_BUCKET_NAME,
-            f"profile/{file_name}",                
+            f"{FOLDER_NAME}/{file_name}",                
             ExtraArgs={"ContentType": file.content_type}
        ) 
-        file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file_name}"
+        file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/{FOLDER_NAME}/{file_name}"
 
         return file_urls
         

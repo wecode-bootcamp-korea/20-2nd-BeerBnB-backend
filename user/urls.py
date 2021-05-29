@@ -1,6 +1,6 @@
 from django.urls import path
 
-from user.views import Signup, Signin, KaKaoSignIn, ProfileUpload, ProfileUploadUpdate, ProfileDelete, Auth
+from user.views import Signup, Signin, KaKaoSignIn, ProfileUpload, ProfileUploadUpdate, ProfileDelete, Auth, HostView
 
 urlpatterns = [
     path('/signup', Signup.as_view()),
@@ -9,5 +9,6 @@ urlpatterns = [
     path('/profile', ProfileUpload.as_view()),
     path('/profile', ProfileUploadUpdate.as_view()),
     path('/profile', ProfileDelete.as_view()),
-    path('/auth/<str:uid64>/<str:email_token>', Auth.as_view())
+    path('/auth/<str:uid64>/<str:email_token>', Auth.as_view()),
+    path('/host', HostView.as_view()),
 ]
