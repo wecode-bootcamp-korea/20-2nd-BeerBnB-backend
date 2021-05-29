@@ -8,7 +8,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib     import Path
-from my_settings import DATABASES, SECRET_KEY, MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY
+from my_settings import DATABASES, SECRET_KEY, MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, EMAIL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -56,6 +56,15 @@ STATICFILES_STORAGE = 'beerbnb.storages.StaticStorage'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+EMAIL_BACKEND       = EMAIL['EMAIL_BACKEND']
+EMAIL_USE_TLS       = EMAIL['EMAIL_USE_TLS']
+EMAIL_PORT          = EMAIL['EMAIL_PORT']
+EMAIL_HOST          = EMAIL['EMAIL_HOST']
+EMAIL_HOST_USER     = EMAIL['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = EMAIL['EMAIL_HOST_PASSWORD']
+REDIRECT_PAGE       = EMAIL['REDIRECT_PAGE']
+
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 # Application definition
