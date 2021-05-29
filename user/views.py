@@ -1,14 +1,20 @@
 import json, bcrypt, jwt, requests
 import boto3
 
-from django.http    import JsonResponse
-from django.views   import View
+from django.http      import JsonResponse
+from django.views     import View
+from django.shortcuts import redirect
 
-from beerbnb.settings import SECRET_KEY
+from beerbnb.settings import SECRET_KEY, EMAIL
 from user.models      import User
 from user.validate    import validate_email, validate_password, validate_phone_number
+from user.auth_email  import make_email_token, check_email_token, message
 from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY
 from beerbnb.settings import AWS_S3_CUSTOM_DOMAIN
+
+from django.utils.http              import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding          import force_bytes, force_text
+from django.core.mail               import EmailMessage
 
 class Signup(View):
     def post(self, request):
@@ -40,16 +46,26 @@ class Signup(View):
             if User.objects.filter(phone_number = phone_number).exists():
                 return JsonResponse({'message':'DUPLICATE PHONE_NUMBER'}, status=400)
 
-            User.objects.create(
+            user = User.objects.create(
                 first_name   = first_name,
                 last_name    = last_name,
                 email        = email,
                 birthday     = birthday,
+                sex          = sex,
                 phone_number = phone_number,
+                is_allowed   = False,
                 password     = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt()).decode('utf-8')
             )
-            return JsonResponse({'message':'SUCCESS'}, status=200)
 
+            domain       = EMAIL['REDIRECT_PAGE']
+            uid64        = urlsafe_base64_encode(force_bytes(user.id))
+            email_token  = make_email_token(user.id)
+            message_data = message(domain, uid64, email_token)
+
+            email = EmailMessage('Hi', message_data, to=[data['email']])
+            email.send()
+
+            return JsonResponse({'message':'SUCCESS'}, status=200)
         except KeyError:
             return JsonResponse({'message':'KEY ERROR'}, status=400)
 
@@ -147,3 +163,16 @@ class ProfileUpload(View):
             
             return JsonResponse({'massage':'success'}, status=200)
         return JsonResponse({'massage':"none file"}, status=404)
+
+class Auth(View):
+    def get(self, request, uid64, email_token):
+        uid  = force_text(urlsafe_base64_decode(uid64))
+        user = User.objects.get(id=uid)
+
+        if check_email_token(email_token):
+            user.is_allowed = True
+            user.save()
+
+            return redirect(EMAIL['REDIRECT_PAGE'])
+        
+        return JsonResponse({'massage': 'auth fail'}, status = 400)

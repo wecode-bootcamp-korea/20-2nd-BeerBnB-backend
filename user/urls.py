@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 from django.urls import path
 
 <<<<<<< HEAD
@@ -44,5 +45,16 @@ from user.views import ProfileUpload
 urlpatterns = [
     path('/upload', ProfileUpload.as_view()),
 >>>>>>> b2b15cb... upload
+<<<<<<< HEAD
 >>>>>>> 1cb79c1... upload
+=======
+=======
+from django.urls import path
+from user.views  import Signup, Auth
+
+urlpatterns = [
+    path('/signup', Signup.as_view()),
+    path('/auth/<str:uidb64>/<str:email_token>', Auth.as_view())
+>>>>>>> 666ebdc... auth_email
+>>>>>>> b091a65... auth_email
 ]
