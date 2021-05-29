@@ -4,7 +4,8 @@ from room.models      import Room, Category, RoomAmenity, Image, Amenity, WishLi
 from user.models      import User,Host, Review
 
 class RoomDetailTest(TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         category=Category.objects.create(
                 id   = 1,
                 name = '아파트'
@@ -82,16 +83,6 @@ class RoomDetailTest(TestCase):
             location          = 2.0,
             cost_effectivenes = 4.0
         )
-
-    def tearDown(self):
-        Room.objects.all().delete()
-        Review.objects.all().delete()
-        Host.objects.all().delete()
-        Image.objects.all().delete()
-        Category.objects.all().delete()
-        User.objects.all().delete()
-        Amenity.objects.all().delete()
-        RoomAmenity.objects.all().delete()
 
     def test_roomdetail_get_view(self):
         client   = Client()
