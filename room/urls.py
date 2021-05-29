@@ -1,5 +1,5 @@
 from django.urls    import path
-from .views         import WishListView, RoomView
+from room.views         import WishListView, RoomView
 
 urlpatterns = [
     path('/<int:room_id>', RoomView.as_view()),

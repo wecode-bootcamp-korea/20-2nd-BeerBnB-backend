@@ -1,16 +1,20 @@
-import json, bcrypt, jwt, requests
-import boto3
+import json, bcrypt, jwt, requests, boto3, googlemaps
 from uuid           import uuid4
+from datetime       import datetime
 
-from user.models        import User
+from django.http            import JsonResponse
+from django.views           import View
+from django.db              import transaction
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+
+from user.models        import User, Host
 from user.validate      import validate_email, validate_password, validate_phone_number
-from user.models        import User
-from user.auth_email    import make_email_token, check_email_token, message
-from beerbnb.settings   import SECRET_KEY, EMAIL
-from user.validate      import validate_email, validate_password
-from my_settings        import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
 from user.utils         import LoginRequired
-from user.profile_utils import S3Client
+from user.auth_email    import make_email_token, check_email_token, message
+from room.models        import Room, Amenity, DisableDate, AbleTime, Category, RoomAmenity, Image
+from my_settings        import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME, MY_GOOGLE_ACCESS_KEY_ID
+from beerbnb.settings   import SECRET_KEY, EMAIL
+from user.s3_utils      import S3Client
 
 from django.http                    import JsonResponse
 from django.views                   import View
@@ -86,6 +90,7 @@ class Signin(View):
             user            = User.objects.get(email=email)
             user_password   = user.password.encode('utf-8')
 
+            #to Do: 이메일 인증
             # if not user.is_allowed:
             #     return JsonResponse({'message': 'UNAUTHORIZED_USER'}, status=401)
             
@@ -94,7 +99,7 @@ class Signin(View):
 
             data         = {'id':user.id}
             access_token = jwt.encode(data, SECRET_KEY, algorithm='HS256')   
-            return JsonResponse({'message':'SUCCESS' , 'token':access_token}, status=200)
+            return JsonResponse({'message':'SUCCESS' , 'token':access_token, 'user_name':user.first_name}, status=200)
 
         except KeyError:
             return JsonResponse({'message':'KEYERROR'}, status=400)
@@ -155,9 +160,10 @@ class ProfileUpload(View):
             if not file:
                 return JsonResponse({'massage':"none file"}, status=404)
             
-            s3_client = S3Client(client)
-            file_name = uuid4().hex
-            file_urls = s3_client.upload(file, file_name)
+            s3_client   = S3Client(client)
+            file_name   = uuid4().hex
+            FOLDER_NAME = "profile"
+            file_urls   = s3_client.upload(file, file_name, FOLDER_NAME)
 
             user.profile_url = file_urls
             user.save()
@@ -183,8 +189,9 @@ class ProfileUploadUpdate(View):
             s3_client = S3Client(client)
             s3_client.delete(file_name)
 
-            file_name = uuid4().hex
-            file_urls = s3_client.upload(file, file_name)
+            FOLDER_NAME = "profile"
+            file_name   = uuid4().hex
+            file_urls   = s3_client.upload(file, file_name, FOLDER_NAME)
 
             user.profile_url = file_urls
             user.save()
@@ -196,7 +203,7 @@ class ProfileUploadUpdate(View):
 
 class ProfileDelete(View):
     @LoginRequired
-    def delete(self, request, user_id): 
+    def delete(self, request): 
         try:
             user   = request.user
 
@@ -227,3 +234,107 @@ class Auth(View):
             return redirect(EMAIL['REDIRECT_PAGE'])
         
         return JsonResponse({'massage': 'auth fail'}, status = 400)
+        
+
+
+class HostView(View):
+    @LoginRequired
+    @transaction.atomic
+    def post(self, request):
+        try:
+            host, created = Host.objects.get_or_create(user=request.user)
+            
+            data         = request.POST.get('room_info')
+            files        = request.FILES.getlist('room_file')
+            
+            if not data:
+                return JsonResponse({'message':"none room_info"}, status=404)
+            if not files:
+                return JsonResponse({'message':"none file"}, status=404)    
+            
+            #to Do:이메일 인증
+            # if not user.is_allowed:
+            #     return JsonResponse({'message':'none_host'}, status=404) 
+            
+            data         = json.loads(data)
+            name         = data['name']
+            min_date     = data['min_date']
+            city         = data['city']
+            adult        = data['adult']
+            children     = data['children']
+            is_refund    = data['is_refund']
+            price        = data['price']
+            category     = data['category']
+            #to do : 구현할 필드
+            # checkin      = data['able_time'][0]
+            # checkout     = data['able_time'][1]
+            # start_date   = data['disable_date'][0]
+            # end_date     = data['disable_date'][1]
+            amenity_list = data['amenity']           
+            address      = data['address']
+            capacity     = adult + children
+
+            gmaps = googlemaps.Client(key=MY_GOOGLE_ACCESS_KEY_ID)
+            if not address:
+                return JsonResponse({'message':'none send ADDRESS'}, status=400)
+
+            geocode_result = gmaps.geocode(address,language='ko')
+            MAX_CAPACITY = 5
+            if int(adult) + int(children) >  MAX_CAPACITY:
+                return JsonResponse({'message':'max capacity'}, status=400)
+
+            latitude     = geocode_result[0]['geometry']['location']['lat'] 
+            longtitude   = geocode_result[0]['geometry']['location']['lng']
+            
+            disable_date = DisableDate.objects.first()
+            able_time    = AbleTime.objects.first()
+            
+            if not Category.objects.filter(name=category).exists():
+                return JsonResponse({'message':'nonexistent category'}, status=400)
+
+            category     = Category.objects.get(name=category)
+            
+            if not amenity_list:
+                return JsonResponse({'message':'none send amenity'}, status =400)
+
+            amenity_list = [Amenity.objects.get(name=amenity) for amenity in amenity_list]
+
+            room = Room.objects.create(
+                name         = name,
+                min_date     = min_date,
+                city         = city,
+                capacity     = capacity,
+                latitude     = latitude,
+                longtitude   = longtitude,
+                is_refund    = is_refund,
+                price        = price,
+                host         = host,
+                able_time    = able_time,
+                disable_date = disable_date,
+                category     = category
+            )
+
+            for amenity in amenity_list:
+                RoomAmenity(room=room, amenity=amenity).save()
+
+            room_id   = room.id
+            s3_client = S3Client(client)
+
+            for file in files:
+                file_name   = uuid4().hex
+                FOLDER_NAME = 'room'
+                file_urls   = s3_client.upload(file, file_name, FOLDER_NAME)
+                Image.objects.create(url=file_urls, room=room)
+
+            return JsonResponse({'message':'success', 'room_id':room.id}, status=201)
+        
+        except KeyError:
+            return JsonResponse({'message':'key error'}, status=404)
+
+        except ValueError as e:
+            return JsonResponse({'message':'value error'}, status=400)
+
+        except Room.DoesNotExist:
+            return JsonResponse({'message':'none exist room'}, status =400)
+        
+        
