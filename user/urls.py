@@ -11,15 +11,23 @@ from django.urls import path
 >>>>>>> e6d6d76... commit
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> d5fa9d3... social login
+=======
+<<<<<<< HEAD
+>>>>>>> d59e24d... commit
 from user.views import Signup, Signin, KaKaoSignIn
 =======
 from user.views import Signup, Signin
 >>>>>>> 4d825b5... commit
+=======
+from user.views import Signup, Signin, KaKaoSignIn, ProfileUpload, Auth
+>>>>>>> ee691ea... commit
 
 urlpatterns = [
     path('/signup', Signup.as_view()),
     path('/signin', Signin.as_view()),
+<<<<<<< HEAD
     path('/kakao', KaKaoSignIn.as_view())
 <<<<<<< HEAD
 =======
@@ -67,5 +75,13 @@ urlpatterns = [
 =======
 =======
 >>>>>>> a94e80e... social login
+<<<<<<< HEAD
 >>>>>>> 65f2a33... dev
+=======
+=======
+    path('/kakao', KaKaoSignIn.as_view()),
+    path('/upload', ProfileUpload.as_view()),
+    path('/auth/<str:uidb64>/<str:email_token>', Auth.as_view())
+>>>>>>> ee691ea... commit
+>>>>>>> d59e24d... commit
 ]
