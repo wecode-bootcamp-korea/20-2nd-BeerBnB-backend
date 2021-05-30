@@ -562,11 +562,12 @@ class SocialUserTest(TestCase):
                                      'birthday':'2021-05-31'
                                     }
                 }
+                
         mocked_requests.get = MagicMock(return_value = MockedResponse())
         headers             = {'HTTP_Authorization':'test_token'}
         response            = client.get("/user/kakao", **headers)
-        user_id             = MockedResponse().json()['id']
-        access_token        = jwt.encode({'id':user_id}, SECRET_KEY, algorithm='HS256')
+        access_token        = jwt.encode({'id':3}, SECRET_KEY, algorithm='HS256')
+        id                  = MockedResponse().json()['id']
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
