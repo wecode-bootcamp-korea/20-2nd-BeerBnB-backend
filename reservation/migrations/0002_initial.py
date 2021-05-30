@@ -9,9 +9,9 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('room', '0001_initial'),
-        ('user', '0001_initial'),
         ('reservation', '0001_initial'),
+        ('user', '0001_initial'),
+        ('room', '0001_initial'),
     ]
 
     operations = [

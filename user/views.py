@@ -1,9 +1,14 @@
-import json, bcrypt, jwt, requests, boto3, googlemaps
+import json, bcrypt, jwt, requests, boto3, googlemaps, time, shutil, json, random, sys, os, hashlib, hmac, base64
+from threading      import Timer
 from uuid           import uuid4
 from datetime       import datetime
 
-from django.http            import JsonResponse
+from django.http            import JsonResponse, HttpResponse
 from django.views           import View
+from django.shortcuts       import redirect
+from django.utils.http      import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding  import force_bytes, force_text
+from django.core.mail       import EmailMessage  
 from django.db              import transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
@@ -14,14 +19,11 @@ from user.auth_email    import make_email_token, check_email_token, message
 from room.models        import Room, Amenity, DisableDate, AbleTime, Category, RoomAmenity, Image
 from my_settings        import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME, MY_GOOGLE_ACCESS_KEY_ID
 from beerbnb.settings   import SECRET_KEY, EMAIL
+from user.validate      import validate_email, validate_password
+from my_settings        import (MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME,
+                                MY_NAVER_ACCESS_KEY_ID, MY_NAVER_SECRET_KEY, MY_PHONE_NUMBER, MY_SERVICE_ID)
+from user.utils         import LoginRequired
 from user.s3_utils      import S3Client
-
-from django.http                    import JsonResponse
-from django.views                   import View
-from django.shortcuts               import redirect
-from django.utils.http              import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding          import force_bytes, force_text
-from django.core.mail               import EmailMessage            
 
 
 class Signup(View):
@@ -338,3 +340,93 @@ class HostView(View):
             return JsonResponse({'message':'none exist room'}, status =400)
         
         
+class SMSAuthView(View):
+    global AuthPhoneNumber
+    AuthPhoneNumber = dict()
+
+    def post(self, request):
+        try:        
+            data              = json.loads(request.body)
+            self.phone_number = data['phone_number']
+            self.auth_number  = random.randrange(100000,999999)
+            
+            if self.phone_number in AuthPhoneNumber:
+                AuthPhoneNumber[self.phone_number] = self.auth_number
+            
+            AuthPhoneNumber[self.phone_number] = self.auth_number
+            self.send_sms() 
+            TIME = 600
+            Timer(TIME, self.timer_delete).start()
+            return JsonResponse({'message':'success'}, status=200)
+
+        except KeyError:
+            return JsonResponse({'message':'key error'}, status=404)
+
+    def get(self, request):
+        try:
+            phone_number = request.GET.get('phone_number')
+            auth_number  = request.GET.get('auth_number')
+            if not phone_number:
+                return JsonResponse({'message':'none send phone_number'}, status=400)
+            
+            if not auth_number:
+                return JsonResponse({'message':'none send auth_number'}, status=400)
+            
+            if not AuthPhoneNumber.get(phone_number):
+                return JsonResponse({'message':'bad request'}, status=404)
+            
+            check = AuthPhoneNumber[phone_number]
+
+            if int(auth_number) != check:
+                return JsonResponse({'message':'invalid authentication number'}, status=404)
+            
+            del check
+            return JsonResponse({'message':'success'}, status=200)
+
+        except KeyError:
+            return JsonResponse({'message':'key error'}, status=404)
+
+    def timer_delete(self) :
+        data      = AuthPhoneNumber[self.phone_number]
+        del data
+
+    def send_sms(self):
+        timestamp = str(int(time.time() * 1000))
+
+        method = "POST"
+        SMS_URL = f'https://sens.apigw.ntruss.com/sms/v2/services/{MY_SERVICE_ID}/messages'
+        URL    = f'/sms/v2/services/{MY_SERVICE_ID}/messages'
+        message = method + " " + URL + "\n" + timestamp + "\n"+ MY_NAVER_ACCESS_KEY_ID
+        message = bytes(message, 'UTF-8')
+
+        SIGNATURE = self.make_signature(message)
+
+        
+        headers = {
+            'Content-Type':'application/json; charset=UTF-8',
+            'X-ncp-apigw-timestamp': timestamp,
+            'x-ncp-iam-access-key': MY_NAVER_ACCESS_KEY_ID,
+            'x-ncp-apigw-signature-v2': SIGNATURE,
+        }
+
+        body = {
+            'type':'SMS',
+            'contentType':'COMM',
+            'countryCode':'82',
+            'from':MY_PHONE_NUMBER,
+            'content': f'code : {self.auth_number} \n after 30sec boom!',
+            'messages':[{'to':f'{self.phone_number}'}]
+        }
+        encoded_data = json.dumps(body)
+
+        res = requests.post(SMS_URL, headers=headers, data=encoded_data)
+
+        print("start")
+        return HttpResponse(res.status_code)
+        
+
+    def	make_signature(self, message):
+        secret_key = bytes(MY_NAVER_SECRET_KEY, 'UTF-8')
+        return base64.b64encode(hmac.new(secret_key, message, digestmod=hashlib.sha256).digest())
+
+
