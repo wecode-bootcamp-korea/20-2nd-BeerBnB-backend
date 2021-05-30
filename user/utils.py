@@ -10,7 +10,7 @@ class LoginRequired:
         self.fuc = fuc
 
     def __call__(self, request, *args, **kwargs):
-        access_token = request.headers.get("Authorization", None)
+        token = request.headers.get("Authorization", None)
         try:
             if access_token:    
                 payload      = jwt.decode(access_token, SECRET_KEY, algorithms = 'HS256')
