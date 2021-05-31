@@ -1,8 +1,8 @@
 from django.db import models
 
 class Reservation(models.Model):
-    checkin  = models.DateTimeField()
-    checkout = models.DateTimeField()
+    checkin  = models.DateField()
+    checkout = models.DateField()
     status   = models.ForeignKey("Status", on_delete=models.CASCADE)
     user     = models.ForeignKey("user.User", on_delete=models.CASCADE)
     room     = models.ForeignKey("room.Room", on_delete=models.CASCADE)
