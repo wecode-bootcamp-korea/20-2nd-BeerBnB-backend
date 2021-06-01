@@ -3,7 +3,7 @@ import jwt, json
 from django.http import JsonResponse
 
 from my_settings import SECRET_KEY
-from users.models import User
+from user.models import User
 
 class LoginRequired:
     def __init__(self, fuc):
@@ -12,9 +12,9 @@ class LoginRequired:
     def __call__(self, request, *args, **kwargs):
         access_token = request.headers.get("Authorization", None)
         try:
-            if token:    
-                payload      = jwt.decode(token, SECRET_KEY, algorithms = 'HS256')
-                user         = Users.objects.get(id=payload['user_id'])
+            if access_token:    
+                payload      = jwt.decode(access_token, SECRET_KEY, algorithms = 'HS256')
+                user         = User.objects.get(id=payload['id'])
                 request.user = user
                 
                 return self.fuc(self, request, *args, **kwargs)
