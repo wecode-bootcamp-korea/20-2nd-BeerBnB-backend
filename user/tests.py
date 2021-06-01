@@ -9,6 +9,21 @@ from django.test    import Client
 from unittest.mock  import patch, MagicMock
 from my_settings    import SECRET_KEY
 
+class HostUserTest(TestCase):
+    def setUp(self):
+        password         = "12345678"
+        hashed_password  = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        User.objects.create(
+                email        = 'abc@gmail.com',
+                password     = hashed_password,
+                first_name   = 'test_user_first_name',
+                last_name    = 'test_user_last_name',
+                sex          = 'M',
+                is_allowed   = True,
+                birthday     = '0000-00-00',
+                phone_number = 1012345678
+            )
+
 class SocialUserTest(TestCase):
     @patch("user.views.requests")
     def test_kakao_signin_new_user_success(self, mocked_requests):
