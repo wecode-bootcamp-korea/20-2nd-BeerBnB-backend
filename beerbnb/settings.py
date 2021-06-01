@@ -8,12 +8,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib     import Path
-<<<<<<< HEAD
 from my_settings import DATABASES, SECRET_KEY, MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, EMAIL
+<<<<<<< HEAD
 =======
 from my_settings import DATABASES, SECRET_KEY, MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY
 
 >>>>>>> f5972cb... upload
+=======
+>>>>>>> 0b6272a... commit
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
