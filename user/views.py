@@ -15,13 +15,10 @@ from beerbnb.settings import AWS_S3_CUSTOM_DOMAIN
 from user.utils       import LoginRequired
 from user.file_upload import s3_upload
 
-<<<<<<< HEAD
 from django.utils.http              import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding          import force_bytes, force_text
 from django.core.mail               import EmailMessage
 
-=======
->>>>>>> 0b6272a... commit
 class Signup(View):
     def post(self, request):
         data = json.loads(request.body)
@@ -149,10 +146,6 @@ class ProfileUpload(View):
             aws_access_key_id     = MY_AWS_ACCESS_KEY_ID,
             aws_secret_access_key = MY_AWS_SECRET_ACCESS_KEY  
             )
-<<<<<<< HEAD
-=======
-            
->>>>>>> 0b6272a... commit
     @LoginRequired
     def post(self, request): 
         try:
@@ -174,10 +167,6 @@ class ProfileUpload(View):
             
         except KeyError:
             return JsonResponse({"message" : "key error"}, status=400)
-<<<<<<< HEAD
-=======
-                
->>>>>>> 0b6272a... commit
 
 class Auth(View):
     def get(self, request, uid64, email_token):
