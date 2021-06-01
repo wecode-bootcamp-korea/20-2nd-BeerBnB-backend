@@ -170,12 +170,11 @@ class HostView(View):
             )
 
             #filter로 수정(고정된 데이터 값)
-            category = Category.objects.create(
-                name = category
-            )
+            if not Category.objects.filter(name=category).exists():
+                return JsonResponse({'message':'nonexistent category'}, status=400)
 
-            #이미지와 네임 데이터에 맞춰 수정(고정된 데이터 값)
-            amenity_list = [Amenity.objects.create(name=amenity, image=1) for amenity in amenity_list]
+            category     = Category.objects.get(name=category)
+            amenity_list = [Amenity.objects.create(name=amenity[0], image=amenity[1]) for amenity in amenity_list]
             room = Room.objects.create(
                 name         = name,
                 min_date     = min_date,
