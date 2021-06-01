@@ -66,6 +66,10 @@ class Signup(View):
             email.send()
 
             return JsonResponse({'message':'SUCCESS'}, status=200)
+<<<<<<< HEAD
+=======
+            
+>>>>>>> 93f50b8... commit
         except KeyError:
             return JsonResponse({'message':'KEY ERROR'}, status=400)
 

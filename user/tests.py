@@ -3,7 +3,6 @@ import bcrypt
 import requests
 
 from user.models    import User
-
 from django.test    import TestCase
 from django.test    import Client
 from unittest.mock  import patch, MagicMock
