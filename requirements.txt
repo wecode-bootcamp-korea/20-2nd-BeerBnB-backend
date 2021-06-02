@@ -16,14 +16,21 @@ sqlparse==0.4.1
 requests==2.25.1
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 gunicorn==20.0.4
 =======
 
 >>>>>>> a94e80e... social login
 =======
+=======
+>>>>>>> main
 jmespath==0.10.0
 python-dateutil==2.8.1
 s3transfer==0.4.2
 Pillow==8.2.0
+<<<<<<< HEAD
 image==1.5.33
 >>>>>>> f5972cb... upload
+=======
+image==1.5.33
+>>>>>>> main
