@@ -1,6 +1,9 @@
 import csv, os
 import googlemaps
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings") 
+django.setup()
+
 from django.core.wsgi   import get_wsgi_application
 from faker              import Faker # 패키지 설치! (pip install Faker)
 from user.models        import *
@@ -8,8 +11,7 @@ from room.models        import *
 from reservation.models import * 
 #*.csv 파일을 upload 파일과 동일 라인 공간에 둔다 / 각 app의 model을 가져온다
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings") 
-django.setup()
+
 #장고 외부 파일이기 때문에, 장고 내 나의 프로젝트에 연결
 
 # *.csv 쌓을 때 빈공간없이 정확히 쌓자
