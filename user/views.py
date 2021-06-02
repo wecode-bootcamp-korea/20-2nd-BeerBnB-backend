@@ -142,10 +142,10 @@ class HostView(View):
             is_refund    = data['is_refund']
             price        = data['price']
             category     = data['category']
-            checkin      = data['able_time'][0]
-            checkout     = data['able_time'][1]
-            start_date   = data['disable_date'][0]
-            end_date     = data['disable_date'][1]
+            # checkin      = data['able_time'][0]
+            # checkout     = data['able_time'][1]
+            # start_date   = data['disable_date'][0]
+            # end_date     = data['disable_date'][1]
             amenity_list = data['amenity']           
             address      = data['address']
 
@@ -175,6 +175,7 @@ class HostView(View):
 
             category     = Category.objects.get(name=category)
             amenity_list = [Amenity.objects.create(name=amenity[0], image=amenity[1]) for amenity in amenity_list]
+            
             room = Room.objects.create(
                 name         = name,
                 min_date     = min_date,
