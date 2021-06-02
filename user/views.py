@@ -1,41 +1,24 @@
-<<<<<<< HEAD
-import json, bcrypt, jwt, requests
-import boto3
+import json, bcrypt, jwt, requests, boto3, googlemaps
 from uuid           import uuid4
 
 from django.http      import JsonResponse
 from django.views     import View
 from django.shortcuts import redirect
+from django.db        import transaction
 
 from beerbnb.settings import SECRET_KEY, EMAIL
-from user.models      import User
+from user.models      import User, Host
 from user.validate    import validate_email, validate_password, validate_phone_number
 from user.auth_email  import make_email_token, check_email_token, message
-from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN
+from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, MY_GOOGLE_ACCESS_KEY_ID, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
 from beerbnb.settings import AWS_S3_CUSTOM_DOMAIN
 from user.utils       import LoginRequired
 from user.file_upload import s3_upload
+from room.models      import Room, Amenity, DisableDate, AbleTime, Category, RoomAmenity, Image
 
 from django.utils.http              import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding          import force_bytes, force_text
 from django.core.mail               import EmailMessage
-=======
-import json, bcrypt, jwt, requests, boto3, googlemaps
-from datetime       import datetime
-
-from django.http    import JsonResponse
-from django.views   import View
-from django.db     import transaction
-
-from beerbnb.settings import SECRET_KEY
-from user.models      import User, Host
-from room.models      import Room, Amenity, DisableDate, AbleTime, Category, RoomAmenity, Image
-from user.validate    import validate_email, validate_password, validate_phone_number
-from user.utils       import LoginRequired
-
-from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, MY_GOOGLE_ACCESS_KEY_ID, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
-
->>>>>>> feature/user-host
 
 class Signup(View):
     def post(self, request):
@@ -197,9 +180,7 @@ class Auth(View):
 
             return redirect(EMAIL['REDIRECT_PAGE'])
         
-<<<<<<< HEAD
         return JsonResponse({'massage': 'auth fail'}, status = 400)
-=======
 
 
 class HostView(View):
@@ -319,4 +300,3 @@ class HostUpload(View):
             
         except KeyError:
             return JsonResponse({"message" : "key error"}, status=400) 
->>>>>>> feature/user-host
