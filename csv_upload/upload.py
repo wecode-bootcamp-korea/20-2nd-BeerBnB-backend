@@ -2,8 +2,6 @@ import csv, os
 import googlemaps
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings") 
-django.setup()
-
 from django.core.wsgi   import get_wsgi_application
 from faker              import Faker # 패키지 설치! (pip install Faker)
 from user.models        import *
