@@ -1,0 +1,6 @@
+email;phone_number;sex;birthday;password;first_name;last_name;profiel_url;social_id;is_allowed
+one@gmail.com;01012345678;M;000101;12345678;하나;김;;;False
+two@gmail.com;01023456789;M;000101;12345678;두리;김;;;False
+three@gmail.com;01034567890;M;000101;12345678;세찌;김;;;False
+four@gmail.com;01045678901;F;000101;12345678;나나;김;;;False
+five@gmail.com;01056789012;F;000101;12345678;오오;김;;;False

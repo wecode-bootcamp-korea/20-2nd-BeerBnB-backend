@@ -1,0 +1,11 @@
+email;room;status;checkin;checkout;
+one@gmail.com;강남호텔;reservation;2021-06-02;2021-06-05;
+two@gmail.com;강남호텔;reservation;2021-06-12;2021-06-15;
+three@gmail.com;강남호텔;reservation;2021-06-17;2021-06-18;
+four@gmail.com;강남호텔;pending;2021-06-17;2021-06-18;
+five@gmail.com;강남별채;reservation;2021-06-02;2021-06-05;
+one@gmail.com;강남별채;pending;2021-06-12;2021-06-15;
+two@gmail.com;강남별채;pending;2021-06-17;2021-06-18;
+three@gmail.com;성수호텔;reservation;2021-06-02;2021-06-05;
+four@gmail.com;성수호텔;reservation;2021-06-12;2021-06-15;
+five@gmail.com;성수호텔;pending;2021-06-17;2021-06-18;
