@@ -8,12 +8,11 @@ from room.models        import *
 from reservation.models import * 
 #*.csv 파일을 upload 파일과 동일 라인 공간에 둔다 / 각 app의 model을 가져온다
 
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings") 
-# django.setup()
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings") 
+django.setup()
 #장고 외부 파일이기 때문에, 장고 내 나의 프로젝트에 연결
 
 # *.csv 쌓을 때 빈공간없이 정확히 쌓자
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beerbnb.settings")
 
 def test():
     print('test')
@@ -182,6 +181,3 @@ def data_load():
     reservation_load()
 #함수개별로(테이블 개별로) csv 업데이트 가능하고, 한번에도 가능하다, 그러나 함수 순서 신경써서 가장 먼저 채워야할 함수부터 진행시킨다
 #shell에서 import upload 혹은 from upload import * 해서 함수 실행한다 / .py 확장자는 쓰지 않는다!!!!
-
-if __name__ == '__main__':
-    test()
