@@ -63,7 +63,8 @@ class HostUserTest(TestCase):
                         "amenity"      : [['test_amenity',"i'm url"], ["test2_amenity","i'm url2"]],
                         "address"      : "서울특별시 강남구 테헤란로 427 위워크 선릉역2"
                         }
-        response     = client.get("/user/host", **headers)
+        mocked_requests.get = MagicMock(return_value = MockedResponse())
+        response            = client.get("/user/host", **headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {
@@ -88,8 +89,8 @@ class SocialUserTest(TestCase):
         mocked_requests.get = MagicMock(return_value = MockedResponse())
         headers             = {'HTTP_Authorization':'token'}
         response            = client.get("/user/kakao", **headers)
-        id                  = MockedResponse().json()['id']
-        access_token        = jwt.encode({'id':id}, SECRET_KEY, algorithm='HS256')
+        user_id             = MockedResponse().json()['id']
+        access_token        = jwt.encode({'id':user_id}, SECRET_KEY, algorithm='HS256')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
