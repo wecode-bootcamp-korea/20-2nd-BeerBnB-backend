@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import json, bcrypt, jwt, requests
 import boto3
 from uuid           import uuid4
@@ -18,6 +19,23 @@ from user.file_upload import s3_upload
 from django.utils.http              import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding          import force_bytes, force_text
 from django.core.mail               import EmailMessage
+=======
+import json, bcrypt, jwt, requests, boto3, googlemaps
+from datetime       import datetime
+
+from django.http    import JsonResponse
+from django.views   import View
+from django.db     import transaction
+
+from beerbnb.settings import SECRET_KEY
+from user.models      import User, Host
+from room.models      import Room, Amenity, DisableDate, AbleTime, Category, RoomAmenity, Image
+from user.validate    import validate_email, validate_password, validate_phone_number
+from user.utils       import LoginRequired
+
+from my_settings      import MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, MY_GOOGLE_ACCESS_KEY_ID, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME
+
+>>>>>>> feature/user-host
 
 class Signup(View):
     def post(self, request):
@@ -179,4 +197,126 @@ class Auth(View):
 
             return redirect(EMAIL['REDIRECT_PAGE'])
         
+<<<<<<< HEAD
         return JsonResponse({'massage': 'auth fail'}, status = 400)
+=======
+
+
+class HostView(View):
+    @LoginRequired
+    @transaction.atomic
+    def post(self, request):
+        try:
+            host, created = Host.objects.get_or_create(user=request.user)
+
+            data = json.loads(request.body)
+
+            name         = data['name']
+            min_date     = data['min_date']
+            city         = data['city']
+            capacity     = data['capacity']
+            is_refund    = data['is_refund']
+            price        = data['price']
+            category     = data['category']
+            # checkin      = data['able_time'][0]
+            # checkout     = data['able_time'][1]
+            # start_date   = data['disable_date'][0]
+            # end_date     = data['disable_date'][1]
+            amenity_list = data['amenity']           
+            address      = data['address']
+
+            gmaps = googlemaps.Client(key=MY_GOOGLE_ACCESS_KEY_ID)
+
+            geocode_result = gmaps.geocode(address,language='ko')
+            
+            if not geocode_result:
+                return JsonResponse({'message':'INVALID ADDRESS'}, status=400)
+            
+            latitude     = geocode_result[0]['geometry']['location']['lat']
+            longtitude   = geocode_result[0]['geometry']['location']['lng']
+
+            disable_date = DisableDate.objects.create(
+                start_date = start_date,
+                end_date   = end_date   
+            )
+
+            able_time = AbleTime.objects.create(
+                checkin  = checkin,
+                checkout = checkout,
+            )
+
+            #filter로 수정(고정된 데이터 값)
+            if not Category.objects.filter(name=category).exists():
+                return JsonResponse({'message':'nonexistent category'}, status=400)
+
+            category     = Category.objects.get(name=category)
+            amenity_list = [Amenity.objects.create(name=amenity[0], image=amenity[1]) for amenity in amenity_list]
+            
+            room = Room.objects.create(
+                name         = name,
+                min_date     = min_date,
+                city         = city,
+                capacity     = capacity,
+                latitude     = latitude,
+                longtitude   = longtitude,
+                is_refund    = is_refund,
+                price        = price,
+                host         = host,
+                able_time    = able_time,
+                disable_date = disable_date,
+                category     = category
+            )
+
+            for amenity in amenity_list:
+                RoomAmenity(room=room, amenity=amenity).save()
+
+            return JsonResponse({'message':'success', 'room_id':room.id}, status=201)
+        
+        except KeyError:
+            return JsonResponse({'message':'key error'}, status=404)
+
+
+
+class HostUpload(View):
+    @LoginRequired
+    @transaction.atomic
+    def post(self, request):
+        try:
+            client   = boto3.client(
+            's3',
+            aws_access_key_id     = MY_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key = MY_AWS_SECRET_ACCESS_KEY  
+            )
+            files    = request.FILES.getlist('room_file')
+            room_id  = request.POST.get('room_id')
+            user     = request.user
+            if not user.is_allowed:
+                return JsonResponse({'message':'none_host'}, status=404) 
+                
+            if not files:
+                return JsonResponse({'message':"none file"}, status=404)
+            
+            if not Room.objects.filter(id=room_id).exists():
+                return JsonResponse({'message':'none exist room'}, status =400)
+
+
+            room = Room.objects.get(id=room_id)
+
+            for file in files:
+                client.upload_fileobj(
+                        file,
+                        AWS_STORAGE_BUCKET_NAME,
+                        f'room/{file}',
+                        ExtraArgs={
+                            "ContentType": file.content_type
+                        }
+                    )
+                file_urls = f"https://{AWS_S3_CUSTOM_DOMAIN}/profile/{file.name}" 
+            
+                Image.objects.create(url=file_urls, room=room)
+
+            return JsonResponse({'message':'success'}, status=200)
+            
+        except KeyError:
+            return JsonResponse({"message" : "key error"}, status=400) 
+>>>>>>> feature/user-host
