@@ -22,7 +22,6 @@ from beerbnb.settings   import SECRET_KEY, EMAIL
 from user.validate      import validate_email, validate_password
 from my_settings        import (MY_AWS_ACCESS_KEY_ID, MY_AWS_SECRET_ACCESS_KEY, AWS_S3_CUSTOM_DOMAIN, AWS_STORAGE_BUCKET_NAME,
                                 MY_NAVER_ACCESS_KEY_ID, MY_NAVER_SECRET_KEY, MY_PHONE_NUMBER, MY_SERVICE_ID)
-from user.utils         import LoginRequired
 from user.s3_utils      import S3Client
 
 
