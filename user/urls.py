@@ -7,9 +7,6 @@ urlpatterns = [
     path('/signin', Signin.as_view()),
     path('/kakao', KaKaoSignIn.as_view()),
     path('/profile', ProfileUpload.as_view()),
-    path('/profile', ProfileUploadUpdate.as_view()),
-    path('/profile', ProfileDelete.as_view()),
-    path('/auth/<str:uid64>/<str:email_token>', Auth.as_view()),
     path('/host', HostView.as_view()),
     path('', SMSAuthView.as_view())
 ]

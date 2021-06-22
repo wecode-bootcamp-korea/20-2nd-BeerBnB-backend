@@ -175,7 +175,6 @@ class ProfileUpload(View):
         except KeyError:
             return JsonResponse({"message" : "key error"}, status=400)
 
-class ProfileUploadUpdate(View):
     @LoginRequired
     def patch(self, request): 
         try:
@@ -202,8 +201,7 @@ class ProfileUploadUpdate(View):
             
         except KeyError:
             return JsonResponse({"message" : "key error"}, status=400)
-
-class ProfileDelete(View):
+    
     @LoginRequired
     def delete(self, request): 
         try:
